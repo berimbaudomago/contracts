@@ -20,6 +20,18 @@ contract SimpleBet is Ownable, ReentrancyGuard {
     mapping(address => uint256) public depositedUserSecondTeam;
     mapping(address => uint256) public depositedUserDraw;
 
+    constructor(
+        address _treasuryFeesAddress, 
+        uint256 _loserFee, 
+        uint256 _tokenDecimals, 
+        address _depositToken 
+    ) {
+        treasuryFeesAddress = _treasuryFeesAddress;
+        loserFee = _loserFee;
+        depositToken = IERC20(_depositToken);
+        decimals = _tokenDecimals;
+    }
+    
     modifier onlyFinished() {
         require(isOver, "Bet still ongoing!");
         _;
@@ -61,35 +73,17 @@ contract SimpleBet is Ownable, ReentrancyGuard {
     function withdraw() external onlyFinished nonReentrant {
         uint256 amountToWithdraw;
         if (winnerId == 1) {
-
             require(depositedUserFirstTeam[msg.sender] > 0, "No deposits into winning bet.");
             amountToWithdraw = ((depositToken.balanceOf(address(this))) * depositedUserFirstTeam[msg.sender]) / depositedFirstTeam;
-        
         } else if (winnerId == 2) { 
-
             require(depositedUserSecondTeam[msg.sender] > 0, "No deposits into winning bet.");
             amountToWithdraw = ((depositToken.balanceOf(address(this))) * depositedUserSecondTeam[msg.sender]) / depositedSecondTeam;
-            
         } else { 
-
             require(depositedUserDraw[msg.sender] > 0, "No deposits into winning bet.");
             amountToWithdraw = ((depositToken.balanceOf(address(this))) * depositedUserDraw[msg.sender]) / depositedDraw;
-       
         }
 
         depositToken.transferFrom(address(this), msg.sender, amountToWithdraw);
-    }
-
-    constructor(
-        address _treasuryFeesAddress, 
-        uint256 _loserFee, 
-        uint256 _tokenDecimals, 
-        address _depositToken 
-    ) {
-        treasuryFeesAddress = _treasuryFeesAddress;
-        loserFee = _loserFee;
-        depositToken = IERC20(_depositToken);
-        decimals = _tokenDecimals;
     }
 
     event ChangeDepositToken(address indexed _token);
