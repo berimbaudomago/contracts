@@ -29,50 +29,55 @@ contract SimpleBet is Ownable, ReentrancyGuard {
         require(!isOver, "Bet has already been settled!");
         winnerId = _team;
         isOver = true;
+        uint256 amount;
 
         if (winnerId == 1) {
-            uint256 amount = ((depositedSecondTeam + depositedDraw) * loserFee) / decimals;
+            amount = ((depositedSecondTeam + depositedDraw) * loserFee) / decimals;
         } else if (winnerId == 2) {
-            uint256 amount = ((depositedFirstTeam + depositedDraw) * loserFee) / decimals;
+            amount = ((depositedFirstTeam + depositedDraw) * loserFee) / decimals;
         } else {
-            uint256 amount = ((depositedFirstTeam + depositedSecondTeam) * loserFee) / decimals;
+            amount = ((depositedFirstTeam + depositedSecondTeam) * loserFee) / decimals;
         }
 
+        depositToken.transferFrom(address(this), treasuryFeesAddress, amount);
     }
 
-    function depositTeam(uint256 _userChoice, uint256 _amount) external {
+    function depositTeam(uint256 _userChoice, uint256 _amount) external nonReentrant {
         if (_userChoice == 1) {
+            depositToken.transferFrom(msg.sender, address(this), _amount);
             depositedUserFirstTeam[msg.sender] += _amount;
             depositedFirstTeam += _amount;
         } else if (_userChoice == 2) { 
+            depositToken.transferFrom(msg.sender, address(this), _amount);
             depositedUserSecondTeam[msg.sender] += _amount;
             depositedSecondTeam += _amount;
         } else { 
+            depositToken.transferFrom(msg.sender, address(this), _amount);
             depositedUserDraw[msg.sender] += _amount;
             depositedDraw += _amount;
         }
     }
 
-    function withdraw(uint256 _amount) external onlyFinished nonReentrant {
+    function withdraw() external onlyFinished nonReentrant {
+        uint256 amountToWithdraw;
         if (winnerId == 1) {
+
             require(depositedUserFirstTeam[msg.sender] > 0, "No deposits into winning bet.");
-            //depositedSecondTeam -= fees;
-            //depositedDraw -= fees;
-            uint256 amount = ((depositedSecondTeam + depositedFirstTeam + depositedDraw) * depositedUserFirstTeam[msg.sender]) / depositedFirstTeam;
-
-
+            amountToWithdraw = ((depositToken.balanceOf(address(this))) * depositedUserFirstTeam[msg.sender]) / depositedFirstTeam;
+        
         } else if (winnerId == 2) { 
+
             require(depositedUserSecondTeam[msg.sender] > 0, "No deposits into winning bet.");
-            //depositedFirstTeam -= fees;
-            //depositedDraw -= fees;
-            uint256 amount = ((depositedSecondTeam + depositedFirstTeam + depositedDraw) * depositedUserSecondTeam[msg.sender]) / depositedSecondTeam;
+            amountToWithdraw = ((depositToken.balanceOf(address(this))) * depositedUserSecondTeam[msg.sender]) / depositedSecondTeam;
             
         } else { 
+
             require(depositedUserDraw[msg.sender] > 0, "No deposits into winning bet.");
-            //depositedFirstTeam -= fees;
-            //depositedSecondTeam -= fees;
-            uint256 amount = ((depositedSecondTeam + depositedFirstTeam + depositedDraw) * depositedUserDraw[msg.sender]) / depositedDraw;
+            amountToWithdraw = ((depositToken.balanceOf(address(this))) * depositedUserDraw[msg.sender]) / depositedDraw;
+       
         }
+
+        depositToken.transferFrom(address(this), msg.sender, amountToWithdraw);
     }
 
     constructor(
