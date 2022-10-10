@@ -15,6 +15,7 @@ contract SimpleBet is Ownable, ReentrancyGuard {
     uint256 public remaining;
     uint256 public loserFee;
     uint256 public decimals;
+    uint256 public totalDeposited;
     bool public isOver = false;
     mapping(address => uint256) public depositedUserFirstTeam;
     mapping(address => uint256) public depositedUserSecondTeam;
@@ -31,7 +32,7 @@ contract SimpleBet is Ownable, ReentrancyGuard {
         depositToken = IERC20(_depositToken);
         decimals = _tokenDecimals;
     }
-    
+
     modifier onlyFinished() {
         require(isOver, "Bet still ongoing!");
         _;
@@ -43,6 +44,8 @@ contract SimpleBet is Ownable, ReentrancyGuard {
         isOver = true;
         uint256 amount;
 
+        totalDeposited = depositedFirstTeam + depositedSecondTeam + depositedDraw;
+
         if (winnerId == 1) {
             amount = ((depositedSecondTeam + depositedDraw) * loserFee) / decimals;
         } else if (winnerId == 2) {
@@ -50,6 +53,8 @@ contract SimpleBet is Ownable, ReentrancyGuard {
         } else {
             amount = ((depositedFirstTeam + depositedSecondTeam) * loserFee) / decimals;
         }
+        
+        totalDeposited -= amount;
 
         depositToken.transferFrom(address(this), treasuryFeesAddress, amount);
     }
@@ -74,13 +79,13 @@ contract SimpleBet is Ownable, ReentrancyGuard {
         uint256 amountToWithdraw;
         if (winnerId == 1) {
             require(depositedUserFirstTeam[msg.sender] > 0, "No deposits into winning bet.");
-            amountToWithdraw = ((depositToken.balanceOf(address(this))) * depositedUserFirstTeam[msg.sender]) / depositedFirstTeam;
+            amountToWithdraw = (totalDeposited * depositedUserFirstTeam[msg.sender]) / depositedFirstTeam;
         } else if (winnerId == 2) { 
             require(depositedUserSecondTeam[msg.sender] > 0, "No deposits into winning bet.");
-            amountToWithdraw = ((depositToken.balanceOf(address(this))) * depositedUserSecondTeam[msg.sender]) / depositedSecondTeam;
+            amountToWithdraw = (totalDeposited * depositedUserSecondTeam[msg.sender]) / depositedSecondTeam;
         } else { 
             require(depositedUserDraw[msg.sender] > 0, "No deposits into winning bet.");
-            amountToWithdraw = ((depositToken.balanceOf(address(this))) * depositedUserDraw[msg.sender]) / depositedDraw;
+            amountToWithdraw = (totalDeposited * depositedUserDraw[msg.sender]) / depositedDraw;
         }
 
         depositToken.transferFrom(address(this), msg.sender, amountToWithdraw);
