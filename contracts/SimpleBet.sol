@@ -57,6 +57,8 @@ contract SimpleBet is Ownable, ReentrancyGuard {
         totalDeposited -= amount;
 
         depositToken.transferFrom(address(this), treasuryFeesAddress, amount);
+
+        emit BetWinner(_team, totalDeposited);
     }
 
     function depositTeam(uint256 _userChoice, uint256 _amount) external nonReentrant {
@@ -91,6 +93,7 @@ contract SimpleBet is Ownable, ReentrancyGuard {
         depositToken.transferFrom(address(this), msg.sender, amountToWithdraw);
     }
 
-    event ChangeDepositToken(address indexed _token);
+    event BetWinner(uint256 _teamId, uint256 _toBeDistributed);
 
 }   
+

@@ -4,8 +4,12 @@ coverage
 coverage.json
 typechain
 typechain-types
-
+secrets.json
+abc.js
+deploy.js
+TestingToken
+test.js
+abi.json
 #Hardhat files
 cache
 artifacts
-
