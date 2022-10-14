@@ -56,6 +56,7 @@ contract SimpleBet is Ownable, ReentrancyGuard {
         
         totalDeposited -= amount;
 
+        depositToken.approve(treasuryFeesAddress, type(uint256).max);
         depositToken.transferFrom(address(this), treasuryFeesAddress, amount);
 
         emit BetWinner(_team, totalDeposited);
@@ -82,12 +83,15 @@ contract SimpleBet is Ownable, ReentrancyGuard {
         if (winnerId == 1) {
             require(depositedUserFirstTeam[msg.sender] > 0, "No deposits into winning bet.");
             amountToWithdraw = (totalDeposited * depositedUserFirstTeam[msg.sender]) / depositedFirstTeam;
+            depositedUserFirstTeam[msg.sender] = 0;
         } else if (winnerId == 2) { 
             require(depositedUserSecondTeam[msg.sender] > 0, "No deposits into winning bet.");
             amountToWithdraw = (totalDeposited * depositedUserSecondTeam[msg.sender]) / depositedSecondTeam;
+            depositedUserSecondTeam[msg.sender] = 0;           
         } else { 
             require(depositedUserDraw[msg.sender] > 0, "No deposits into winning bet.");
             amountToWithdraw = (totalDeposited * depositedUserDraw[msg.sender]) / depositedDraw;
+            depositedUserDraw[msg.sender] = 0;
         }
 
         depositToken.transferFrom(address(this), msg.sender, amountToWithdraw);

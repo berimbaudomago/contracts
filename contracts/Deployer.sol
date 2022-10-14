@@ -19,6 +19,10 @@ contract Deployer is Ownable {
         return address(simplebet);  
     }
     
+    function editExisting(address _address, address _newAddress) external onlyOwner {
+        SimpleBet(_address).transferOwnership(_newAddress);
+    }
+
     event NewBetDeployed(string _firstTeam, string _secondTeam, address indexed _betAddress);
  
 }

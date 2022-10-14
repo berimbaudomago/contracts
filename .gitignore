@@ -10,6 +10,8 @@ deploy.js
 TestingToken
 test.js
 abi.json
+abiMaumau.json
+simpleBet.json
 #Hardhat files
 cache
 artifacts
