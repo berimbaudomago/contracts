@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.9;
-import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "./interfaces/IERC20.sol";
 
-contract SimpleBet is Ownable, ReentrancyGuard {
+contract SimpleBet is ReentrancyGuard {
 
     IERC20 public depositToken;
     address public treasuryFeesAddress;
+    address public owner;
     uint256 public depositedFirstTeam;
     uint256 public depositedSecondTeam;
     uint256 public depositedDraw;
@@ -25,8 +25,10 @@ contract SimpleBet is Ownable, ReentrancyGuard {
         address _treasuryFeesAddress, 
         uint256 _loserFee, 
         uint256 _tokenDecimals, 
-        address _depositToken 
+        address _depositToken, 
+        address _owner
     ) {
+        owner = _owner;
         treasuryFeesAddress = _treasuryFeesAddress;
         loserFee = _loserFee;
         depositToken = IERC20(_depositToken);
@@ -35,6 +37,11 @@ contract SimpleBet is Ownable, ReentrancyGuard {
 
     modifier onlyFinished() {
         require(isOver, "Bet still ongoing!");
+        _;
+    }
+
+    modifier onlyOwner {
+        require(msg.sender == owner, "Ownable: msg.sender is not owner");
         _;
     }
 

@@ -12,17 +12,13 @@ contract Deployer is Ownable {
         uint256 _tokenDecimals, 
         address _depositToken,
         string memory _firstTeam,
-        string memory _secondTeam 
-    ) external returns (address) {
-        SimpleBet simplebet = new SimpleBet(_treasuryFeesAddress, _loserFee, _tokenDecimals, _depositToken);
+        string memory _secondTeam
+    ) external onlyOwner returns (address) {
+        SimpleBet simplebet = new SimpleBet(_treasuryFeesAddress, _loserFee, _tokenDecimals, _depositToken, msg.sender);
         emit NewBetDeployed(_firstTeam, _secondTeam, address(simplebet));
         return address(simplebet);  
     }
     
-    function editExisting(address _address, address _newAddress) external onlyOwner {
-        SimpleBet(_address).transferOwnership(_newAddress);
-    }
-
     event NewBetDeployed(string _firstTeam, string _secondTeam, address indexed _betAddress);
  
 }
