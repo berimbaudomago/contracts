@@ -12,6 +12,8 @@ test.js
 abi.json
 abiMaumau.json
 simpleBet.json
+scripts/tests
+.gitignore
 #Hardhat files
 cache
 artifacts

@@ -40,29 +40,36 @@ contract SimpleBet is Ownable, ReentrancyGuard {
 
     function setWinner(uint256 _team) external onlyOwner {
         require(!isOver, "Bet has already been settled!");
-        winnerId = _team;
         isOver = true;
         uint256 amount;
 
         totalDeposited = depositedFirstTeam + depositedSecondTeam + depositedDraw;
 
-        if (winnerId == 1) {
-            amount = ((depositedSecondTeam + depositedDraw) * loserFee) / decimals;
-        } else if (winnerId == 2) {
-            amount = ((depositedFirstTeam + depositedDraw) * loserFee) / decimals;
-        } else {
-            amount = ((depositedFirstTeam + depositedSecondTeam) * loserFee) / decimals;
-        }
-        
-        totalDeposited -= amount;
+        if (_team == 1) {
+            winnerId = _team;
+            amount = _calculateFees(depositedSecondTeam + depositedDraw);
 
-        depositToken.approve(treasuryFeesAddress, type(uint256).max);
-        depositToken.transferFrom(address(this), treasuryFeesAddress, amount);
+        } else if (winnerId == 2) {
+            winnerId = _team;
+            amount = _calculateFees(depositedFirstTeam + depositedDraw);
+        } else {
+            winnerId = _team;
+            amount = _calculateFees(depositedFirstTeam + depositedSecondTeam);
+        }
+
+        depositToken.transfer(treasuryFeesAddress, amount);
+        totalDeposited -= amount;
 
         emit BetWinner(_team, totalDeposited);
     }
 
+    function _calculateFees(uint256 _amount) internal view returns(uint256) {
+        return (_amount * loserFee) / 10000;
+    }
+
     function depositTeam(uint256 _userChoice, uint256 _amount) external nonReentrant {
+        require(!isOver, "Bet has already been settled!");
+
         if (_userChoice == 1) {
             depositToken.transferFrom(msg.sender, address(this), _amount);
             depositedUserFirstTeam[msg.sender] += _amount;
@@ -76,6 +83,8 @@ contract SimpleBet is Ownable, ReentrancyGuard {
             depositedUserDraw[msg.sender] += _amount;
             depositedDraw += _amount;
         }
+
+        emit NewDeposit(_userChoice, _amount);
     }
 
     function withdraw() external onlyFinished nonReentrant {
@@ -94,10 +103,10 @@ contract SimpleBet is Ownable, ReentrancyGuard {
             depositedUserDraw[msg.sender] = 0;
         }
 
-        depositToken.transferFrom(address(this), msg.sender, amountToWithdraw);
+        depositToken.transfer(msg.sender, amountToWithdraw);
     }
 
     event BetWinner(uint256 _teamId, uint256 _toBeDistributed);
+    event NewDeposit(uint256 _teamId, uint256 _amount);
 
-}   
-
+}  

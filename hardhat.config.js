@@ -16,9 +16,10 @@ module.exports = {
       accounts: [secrets.key]
     }
   },
-  allowUnlimitedContractSize: true,
 
   etherscan: {
-    apiKey: secrets.apiKey
+    apiKey: {
+      goerli: secrets.apiKey
+    } 
   },
 };
