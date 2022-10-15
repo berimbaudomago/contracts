@@ -49,12 +49,14 @@ contract SimpleBet is Ownable, ReentrancyGuard {
             winnerId = _team;
             amount = _calculateFees(depositedSecondTeam + depositedDraw);
 
-        } else if (winnerId == 2) {
+        } else if (_team == 2) {
             winnerId = _team;
             amount = _calculateFees(depositedFirstTeam + depositedDraw);
-        } else {
+        } else if (_team == 0) {
             winnerId = _team;
             amount = _calculateFees(depositedFirstTeam + depositedSecondTeam);
+        } else {
+            revert();
         }
 
         depositToken.transfer(treasuryFeesAddress, amount);
